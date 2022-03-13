@@ -1,0 +1,8 @@
+input LoginInput {
+  identifier: String!
+  password: String!
+}
+
+extend type Mutation {
+  login(input: LoginInput!): User!
+}

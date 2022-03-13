@@ -1,0 +1,6 @@
+scalars:
+  DateTime: str
+  Time: str
+  BigInt: int
+  BoardID: int
+  Duration: DesignFields
