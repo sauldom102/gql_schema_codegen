@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 setup(
     name="gql_schema_codegen",
     packages=packages,
-    version="1.0",
+    version="1.0.1",
     author="Saul Dominguez",
     author_email="saulydominguez@gmail.com",
     description="A module to generate Python typings from a GrapqhQL schema",
@@ -21,7 +21,8 @@ setup(
         'graphqlclient==0.2.4',
         'argparse==1.4.0',
         'pytest-snapshot==0.8.1',
-        'pytest==7.1.1'
+        'pytest==7.1.1',
+        'PyYAML==6.0'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
