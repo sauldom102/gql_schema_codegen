@@ -1,0 +1,6 @@
+scalars:
+  DateTime: datetime
+  CVE: str
+  CWE: str
+  Email: str
+  URL: str
