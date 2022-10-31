@@ -1,5 +1,7 @@
 from typing import Dict
 
+BUILTIN_TYPES = {"str", "int", "float", "bool"}
+
 VALUE_TYPES: Dict[str, str] = {
     "ID": "str",
     "String": "str",

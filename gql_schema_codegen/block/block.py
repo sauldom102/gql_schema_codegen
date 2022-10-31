@@ -30,19 +30,19 @@ class Block(BaseInfo):
 
         if self.type == "enum":
             self.dependency_group.add_dependency(
-                Dependency(imported_from="typing", dependency="Literal")
+                Dependency(imported_from="enum", dependency="Enum")
             )
-            return f"{display_name} = Literal['{', '.join(map(lambda f: f.name, self.fields))}']"
+            return f"{display_name} = Enum('{display_name}', '{' '.join(map(lambda f: f.name, self.fields))}')"
 
         self.dependency_group.add_dependency(
             Dependency(imported_from="dataclasses", dependency="dataclass")
         )
         self.dependency_group.add_dependency(
             Dependency(
-                imported_from="mashumaro.mixins.json", dependency="DataClassJsonMixin"
+                imported_from="mashumaro.mixins.json", dependency="DataClassJSONMixin"
             )
         )
-        return f"@dataclass\nclass {display_name}(DataClassJsonMixin):"
+        return f"@dataclass\nclass {display_name}(DataClassJSONMixin):"
 
     @property
     def category(self):
