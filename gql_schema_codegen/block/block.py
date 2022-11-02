@@ -1,4 +1,5 @@
 import re
+import os
 from typing import List, Literal, NamedTuple, Optional, Union
 
 from ..base import BaseInfo
@@ -32,7 +33,7 @@ class Block(BaseInfo):
             self.dependency_group.add_dependency(
                 Dependency(imported_from="enum", dependency="Enum")
             )
-            return f"{display_name} = Enum('{display_name}', '{' '.join(map(lambda f: f.name, self.fields))}')"
+            return f"class {display_name}(str, Enum):" 
 
         self.dependency_group.add_dependency(
             Dependency(imported_from="dataclasses", dependency="dataclass")
@@ -59,11 +60,15 @@ class Block(BaseInfo):
 
     @property
     def file_representation(self):
-        if self.type == "enum":
-            return self.heading_file_line
-
         lines_with_deps: List[str] = []
         lines: List[str] = []
+
+        if self.type == "enum":
+            lines.append(self.heading_file_line)
+            for x in map(lambda f: f.name, self.fields):
+                lines.append(f'    {x} = "{x}"')
+            return "\n".join(lines)
+
 
         if self.heading_file_line is not None:
             lines.append(self.heading_file_line)

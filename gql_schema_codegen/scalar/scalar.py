@@ -24,7 +24,7 @@ class ScalarType(BaseInfo):
 
             return f"{self.name} = Any"
 
-        if self.name == "DateTime":
+        if self.value == "datetime":
             self.dependency_group.add_dependency(
                 Dependency(imported_from="dataclasses", dependency="dataclass")
             )
