@@ -36,6 +36,21 @@ class ScalarType(BaseInfo):
             )
             self.dependency_group.add_direct_dependency("dateutil.parser")
             return ""
+        
+        if self.name == "Property":
+            self.dependency_group.add_dependency(
+                Dependency(imported_from="typing", dependency="Union")
+            )
+            self.dependency_group.add_dependency(
+                Dependency(imported_from="datetime", dependency="datetime")
+            )
+            self.dependency_group.add_dependency(
+                Dependency(imported_from="typing", dependency="List")
+            )
+            self.dependency_group.add_dependency(
+                Dependency(imported_from="decimal", dependency="Decimal")
+            )
+            return f"{self.name} = {self.value}"
 
         if self.value in list(VALUE_TYPES.values()):
             return f"{self.name} = {self.value}"
