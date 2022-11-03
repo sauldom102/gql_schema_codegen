@@ -39,6 +39,9 @@ class Block(BaseInfo):
             Dependency(imported_from="dataclasses", dependency="dataclass")
         )
         self.dependency_group.add_dependency(
+            Dependency(imported_from="dataclasses", dependency="field")
+        )
+        self.dependency_group.add_dependency(
             Dependency(
                 imported_from="mashumaro.mixins.json", dependency="DataClassJSONMixin"
             )
@@ -76,6 +79,8 @@ class Block(BaseInfo):
         for f in self.fields:
             if "dateutil.parser" in str(f.file_line):
                 lines_with_deps.append(f"    {f.file_line}")
+            elif "Optional[" in str(f.file_line):
+                lines_with_deps.append(f"    {f.file_line} = field(default=None)")
             else:
                 lines.append(f"    {f.file_line}")
 
