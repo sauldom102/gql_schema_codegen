@@ -8,6 +8,7 @@ VALUE_TYPES: Dict[str, str] = {
     "Int": "int",
     "Float": "float",
     "Boolean": "bool",
+    "DateTime": 'datetime = field(metadata={"deserialize": dateutil.parser.isoparse, "serialize": lambda v: v.strftime("%Y-%m-%d %H:%M:%S")})',
 }
 
 BLOCK_PATTERN = r"(?P<type>type|input|enum|interface)\s(?P<name>[\w_]+)\s(implements\s(?P<implements>[\w_\s&]+)\s)?\{(?P<fields>[^}]+)\}\n?"

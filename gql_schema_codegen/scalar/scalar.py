@@ -17,14 +17,7 @@ class ScalarType(BaseInfo):
 
     @property
     def file_representation(self):
-        if type(self.value) is not str:
-            self.dependency_group.add_dependency(
-                Dependency(imported_from="typing", dependency="Any")
-            )
-
-            return f"{self.name} = Any"
-
-        if self.value == "datetime":
+        if str(self.name) == "DateTime":
             self.dependency_group.add_dependency(
                 Dependency(imported_from="dataclasses", dependency="dataclass")
             )
@@ -36,6 +29,14 @@ class ScalarType(BaseInfo):
             )
             self.dependency_group.add_direct_dependency("dateutil.parser")
             return ""
+
+        if type(self.value) is not str:
+            self.dependency_group.add_dependency(
+                Dependency(imported_from="typing", dependency="Any")
+            )
+
+            return f"{self.name} = Any"
+
         
         if self.name == "Property":
             self.dependency_group.add_dependency(

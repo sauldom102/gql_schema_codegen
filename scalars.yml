@@ -1,5 +1,4 @@
 scalars:
-  DateTime: str
   CVE: str
   CWE: str
   Email: str

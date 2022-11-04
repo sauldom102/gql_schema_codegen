@@ -42,9 +42,13 @@ class Block(BaseInfo):
             Dependency(imported_from="dataclasses", dependency="field")
         )
         self.dependency_group.add_dependency(
-            Dependency(
-                imported_from="mashumaro.mixins.json", dependency="DataClassJSONMixin"
-            )
+            Dependency(imported_from="mashumaro.mixins.json", dependency="DataClassJSONMixin")
+        )
+        self.dependency_group.add_dependency(
+            Dependency(imported_from="mashumaro.config", dependency="BaseConfig")
+        )
+        self.dependency_group.add_dependency(
+            Dependency(imported_from="mashumaro.config", dependency="TO_DICT_ADD_OMIT_NONE_FLAG")
         )
         return f"@dataclass\nclass {display_name}(DataClassJSONMixin):"
 
@@ -77,14 +81,22 @@ class Block(BaseInfo):
             lines.append(self.heading_file_line)
 
         for f in self.fields:
-            if "dateutil.parser" in str(f.file_line):
+            if "dateutil.parser" in str(f.file_line) and "default=None" in str(f.file_line):
                 lines_with_deps.append(f"    {f.file_line}")
             elif "Optional[" in str(f.file_line):
-                lines_with_deps.append(f"    {f.file_line} = field(default=None)")
+                if "dateutil.parser.isopare" in str(f.file_line):
+                    lines_with_deps.append('    Optional[datetime] = field(default=None, metadata={"deserialize": dateutil.parser.isoparse, "serialize": lambda v: v})')
+                else:
+                    lines_with_deps.append(f"    {f.file_line} = field(default=None)")
             else:
                 lines.append(f"    {f.file_line}")
 
-        return "\n".join(lines + lines_with_deps)
+        suffix = [
+            "",
+            " " * 4 + "class Config(BaseConfig):",
+            " " * 8 + "code_generation_options = [TO_DICT_ADD_OMIT_NONE_FLAG]"
+        ]
+        return "\n".join(lines + lines_with_deps + suffix)
 
     def __repr__(self):
         return f"Block: {self.type} {self.name} ({len(self.fields)} fields)"
@@ -134,7 +146,7 @@ class BlockField(BaseInfo):
 
         if is_array and not is_array_item_required:
             if "dateutil.parser.isoparse" in str(item_type):
-                item_type = 'Optional[datetime] = field(default=None, metadata={"deserialize": dateutil.parser.isoparse})'
+                item_type = 'Optional[datetime] = field(default=None, metadata={"deserialize": dateutil.parser.isoparse, "serialize": lambda v: v})'
             else:
                 item_type = f'Optional["{item_type}"]'
 
@@ -158,7 +170,7 @@ class BlockField(BaseInfo):
                 Dependency(imported_from="typing", dependency="Optional")
             )
             if "dateutil.parser.isoparse" in str(v_type_str):
-                return 'Optional[datetime] = field(default=None, metadata={"deserialize": dateutil.parser.isoparse})'
+                return 'Optional[datetime] = field(default=None, metadata={"deserialize": dateutil.parser.isoparse, "serialize": lambda v: v})'
             else:
                 return f"Optional[{v_type_str}]"
 
