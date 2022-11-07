@@ -47,9 +47,6 @@ class Block(BaseInfo):
         self.dependency_group.add_dependency(
             Dependency(imported_from="mashumaro.config", dependency="BaseConfig")
         )
-        self.dependency_group.add_dependency(
-            Dependency(imported_from="mashumaro.config", dependency="TO_DICT_ADD_OMIT_NONE_FLAG")
-        )
         return f"@dataclass\nclass {display_name}(DataClassJSONMixin):"
 
     @property
@@ -94,7 +91,7 @@ class Block(BaseInfo):
         suffix = [
             "",
             " " * 4 + "class Config(BaseConfig):",
-            " " * 8 + "code_generation_options = [TO_DICT_ADD_OMIT_NONE_FLAG]"
+            " " * 8 + 'code_generation_options = ["TO_DICT_ADD_OMIT_NONE_FLAG"]'
         ]
         return "\n".join(lines + lines_with_deps + suffix)
 
@@ -191,9 +188,9 @@ class BlockField(BaseInfo):
             v_type_str = self.value_type_str()
             if v_type_str not in list(VALUE_TYPES.values()):
                 self.dependency_group.add_dependency(
-                    Dependency(imported_from="typing", dependency="ClassVar")
+                    Dependency(imported_from="typing", dependency="TypeAlias")
                 )
-                v_type_str = f'ClassVar["{self.type_str}"]'
+                return f'{self.result_definition_name}: TypeAlias = "{v_type_str}"'
 
             return f"{self.result_definition_name} = {v_type_str}"
 
