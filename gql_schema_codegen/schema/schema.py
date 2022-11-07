@@ -228,10 +228,10 @@ class Schema:
 
     @property
     def file_representation(self):
-        lines: List[str] = ['\n' * 3]
+        lines: List[str] = ['\n' * 2]
 
         if len(self.scalars) > 0:
-            lines.extend(['## Scalars'] + ['\n' * 2])
+            # lines.extend(['## Scalars'] + ['\n' * 2])
 
             for s in self.scalars:
                 lines.extend([s.file_representation] + ['\n' * 2])

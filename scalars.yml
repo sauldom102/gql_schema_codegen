@@ -1,0 +1,6 @@
+scalars:
+  CVE: str
+  CWE: str
+  Email: str
+  URL: str
+  Property: Union[str, int, datetime, Decimal, float, bool, None, List[str], List[int], List[Decimal], List[float], List[bool], List[datetime]]
