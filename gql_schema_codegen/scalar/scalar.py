@@ -28,6 +28,7 @@ class ScalarType(BaseInfo):
                 Dependency(imported_from="datetime", dependency="datetime")
             )
             self.dependency_group.add_direct_dependency("dateutil.parser")
+            self.dependency_group.add_direct_dependency("neo4j")
             return ""
 
         if type(self.value) is not str:
@@ -37,7 +38,6 @@ class ScalarType(BaseInfo):
 
             return f"{self.name} = Any"
 
-        
         if self.name == "Property":
             self.dependency_group.add_dependency(
                 Dependency(imported_from="typing", dependency="Union")
