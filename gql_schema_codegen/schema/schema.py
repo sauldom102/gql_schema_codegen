@@ -5,14 +5,24 @@ import subprocess
 from typing import List, Optional
 
 import yaml
-from graphql import (build_client_schema, build_schema,
-                     get_introspection_query, print_schema)
+from graphql import (
+    build_client_schema,
+    build_schema,
+    get_introspection_query,
+    print_schema,
+)
 from graphqlclient import GraphQLClient
 
 from ..block import Block, BlockField, BlockFieldInfo, BlockInfo
-from ..constants import (BLOCK_PATTERN, DIRECTIVE_PATTERN,
-                         DIRECTIVE_USAGE_PATTERN, FIELD_PATTERN,
-                         RESOLVER_TYPES, SCALAR_PATTERN, UNION_PATTERN)
+from ..constants import (
+    BLOCK_PATTERN,
+    DIRECTIVE_PATTERN,
+    DIRECTIVE_USAGE_PATTERN,
+    FIELD_PATTERN,
+    RESOLVER_TYPES,
+    SCALAR_PATTERN,
+    UNION_PATTERN,
+)
 from ..constants.block_fields import all_block_fields
 from ..dependency import Dependency, DependencyGroup
 from ..scalar import ScalarInfo, ScalarType
@@ -32,6 +42,7 @@ class Schema:
     url: Optional[str] = None
     _config_file_content = None
     config_file: Optional[str] = None
+    enum_only: bool = False
 
     def __init__(self, **kwargs) -> None:
         if "path" in kwargs and type(kwargs["path"]) is str:
@@ -42,6 +53,9 @@ class Schema:
 
         if "config_file" in kwargs and type(kwargs["config_file"]) is str:
             self.config_file = kwargs["config_file"]
+
+        self.enum_only = kwargs.get("enum_only", False)
+        self.enum_module = kwargs.get("enum_module")
 
         self.dependency_group = DependencyGroup()
 
@@ -192,6 +206,10 @@ class Schema:
 
                 block_type = block["type"]
                 block_name = block["name"]
+
+                if self.enum_only and block_type != "enum":
+                    continue
+
                 all_block_fields[block_name] = set()
                 for field in self.get_fields_from_block(block["fields"]):
                     all_block_fields[block_name].add(field["name"])
@@ -215,7 +233,12 @@ class Schema:
                 )
                 b = Block(block_info, dependency_group=self.dependency_group)
 
-                blocks.append(b)
+                if block_type == "enum" and self.enum_module:
+                    self.dependency_group.add_dependency(
+                        Dependency(self.enum_module, b.display_name)
+                    )
+                else:
+                    blocks.append(b)
 
             self._blocks = list(
                 filter(lambda b: b.name not in self.ignore_types, blocks)
@@ -233,6 +256,9 @@ class Schema:
 
     @property
     def unions(self):
+        if self.enum_only:
+            return []
+
         if not self._unions:
             self._unions = []
 
@@ -246,6 +272,9 @@ class Schema:
 
     @property
     def scalars(self):
+        if self.enum_only:
+            return []
+
         if not self._scalars:
             self._scalars = []
 

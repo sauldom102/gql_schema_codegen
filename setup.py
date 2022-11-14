@@ -1,4 +1,5 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
+
 
 packages = find_packages()
 
@@ -15,14 +16,17 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/sauldom102/gql_schema_codegen",
-    py_modules=['gql_schema_codegen', ],
+    py_modules=[
+        "gql_schema_codegen",
+    ],
     install_requires=[
-        'graphql-core==3.2.0',
-        'graphqlclient==0.2.4',
-        'argparse==1.4.0',
-        'pytest-snapshot==0.8.1',
-        'pytest==7.1.1',
-        'PyYAML==6.0'
+        "graphql-core>=3.2.0",
+        "graphqlclient>=0.2.4",
+        "PyYAML",
+    ],
+    test_require=[
+        "pytest",
+        "pytest-snapshot",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
