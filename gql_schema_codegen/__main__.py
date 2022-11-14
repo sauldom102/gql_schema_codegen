@@ -37,18 +37,36 @@ parser.add_argument(
     help="path of the config file in yaml format (default: gql_schema_codegen.config.yml)",
 )
 
-parser.add_argument(
-    "--enum-only",
-    dest="enum_only",
-    action="store_true",
-    help="whether to generate only enums",
-)
+blocks = {
+    "enum",
+    "scalar",
+    "type",
+    "param_type",
+    "input",
+}
 
 parser.add_argument(
-    "--enum-module",
-    dest="enum_module",
-    type=str,
-    help="module name from where to import eums. if not provided enums are generated in-place",
+    "-b",
+    "--block",
+    dest="blocks",
+    action="append",
+    choices=blocks,
+    help="operate on these blocks differently",
+)
+
+group = parser.add_mutually_exclusive_group()
+
+group.add_argument(
+    "--import",
+    dest="import_blocks",
+    help="module name from where to import --blocks",
+)
+
+group.add_argument(
+    "--only",
+    dest="only_blocks",
+    action="store_true",
+    help="only output blocks specified in --blocks",
 )
 
 
@@ -59,8 +77,9 @@ if __name__ == "__main__":
         path=args.schema_path,
         url=args.schema_url,
         config_file=args.config_file,
-        enum_only=args.enum_only,
-        enum_module=args.enum_module,
+        blocks=args.blocks,
+        import_blocks=args.import_blocks,
+        only_blocks=args.only_blocks,
     )
     if args.to_path:
         file_representation = s.generate_type_file(args.to_path)
