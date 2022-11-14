@@ -1,9 +1,10 @@
-import re
 import os
+import re
 from typing import List, Literal, NamedTuple, Optional, Union
 
 from ..base import BaseInfo
 from ..constants import RESOLVER_TYPES, VALUE_TYPES
+from ..constants.block_fields import all_block_fields
 from ..dependency import Dependency, DependencyGroup
 from ..utils import pascal_case
 
@@ -21,6 +22,7 @@ class Block(BaseInfo):
     def __init__(self, info, dependency_group: DependencyGroup) -> None:
         super().__init__(info)
         self.dependency_group = dependency_group
+        self.parent_classes = set()
 
     @property
     def heading_file_line(self):
@@ -33,7 +35,7 @@ class Block(BaseInfo):
             self.dependency_group.add_dependency(
                 Dependency(imported_from="enum", dependency="Enum")
             )
-            return f"class {display_name}(str, Enum):" 
+            return f"class {display_name}(str, Enum):"
 
         self.dependency_group.add_dependency(
             Dependency(imported_from="dataclasses", dependency="dataclass")
@@ -42,12 +44,24 @@ class Block(BaseInfo):
             Dependency(imported_from="dataclasses", dependency="field")
         )
         self.dependency_group.add_dependency(
-            Dependency(imported_from="mashumaro.mixins.json", dependency="DataClassJSONMixin")
+            Dependency(
+                imported_from="mashumaro.mixins.json", dependency="DataClassJSONMixin"
+            )
         )
         self.dependency_group.add_dependency(
             Dependency(imported_from="mashumaro.config", dependency="BaseConfig")
         )
-        return f"@dataclass\nclass {display_name}(DataClassJSONMixin):"
+
+        if not self.implements:
+            return (
+                f"@dataclass(kw_only=True)\nclass {display_name}(DataClassJSONMixin):"
+            )
+
+        for el in self.info.implements.split("&"):  # type: ignore
+            self.parent_classes.add(el.strip())
+
+        parent = ", ".join(list(self.parent_classes))
+        return f"@dataclass(kw_only=True)\nclass {display_name}({parent}):"
 
     @property
     def category(self):
@@ -73,16 +87,26 @@ class Block(BaseInfo):
                 lines.append(f'    {x} = "{x}"')
             return "\n".join(lines)
 
-
         if self.heading_file_line is not None:
             lines.append(self.heading_file_line)
 
+        parent_fields = set()
+        for p in self.parent_classes:
+            parent_fields.update(all_block_fields.get(p, set()))
+
         for f in self.fields:
-            if "dateutil.parser" in str(f.file_line) and "default=None" in str(f.file_line):
+            if str(f).split(":")[1].strip() in parent_fields:
+                continue
+
+            if "dateutil.parser" in str(f.file_line) and "default=None" in str(
+                f.file_line
+            ):
                 lines_with_deps.append(f"    {f.file_line}")
             elif "Optional[" in str(f.file_line):
                 if "dateutil.parser.isopare" in str(f.file_line):
-                    lines_with_deps.append('    Optional[datetime] = field(default=None, metadata={"deserialize": dateutil.parser.isoparse, "serialize": lambda v: v.isoformat()})')
+                    lines_with_deps.append(
+                        '    Optional[datetime] = field(default=None, metadata={"deserialize": lambda d: d.to_native() if isinstance(d, neo4j.time.DateTime) else dateutil.parser.isoparse(d), "serialize": lambda v: v.isoformat()})'
+                    )
                 else:
                     lines_with_deps.append(f"    {f.file_line} = field(default=None)")
             else:
@@ -91,7 +115,7 @@ class Block(BaseInfo):
         suffix = [
             "",
             " " * 4 + "class Config(BaseConfig):",
-            " " * 8 + 'code_generation_options = ["TO_DICT_ADD_OMIT_NONE_FLAG"]'
+            " " * 8 + 'code_generation_options = ["TO_DICT_ADD_OMIT_NONE_FLAG"]',
         ]
         return "\n".join(lines + lines_with_deps + suffix)
 
@@ -143,7 +167,7 @@ class BlockField(BaseInfo):
 
         if is_array and not is_array_item_required:
             if "dateutil.parser.isoparse" in str(item_type):
-                item_type = 'Optional[datetime] = field(default=None, metadata={"deserialize": dateutil.parser.isoparse, "serialize": lambda v: v.isoformat()})'
+                item_type = 'Optional[datetime] = field(default=None, metadata={"deserialize": lambda d: d.to_native() if isinstance(d, neo4j.time.DateTime) else dateutil.parser.isoparse(d), "serialize": lambda v: v.isoformat()})'
             else:
                 item_type = f'Optional["{item_type}"]'
 
@@ -167,7 +191,7 @@ class BlockField(BaseInfo):
                 Dependency(imported_from="typing", dependency="Optional")
             )
             if "dateutil.parser.isoparse" in str(v_type_str):
-                return 'Optional[datetime] = field(default=None, metadata={"deserialize": dateutil.parser.isoparse, "serialize": lambda v: v.isoformat()})'
+                return 'Optional[datetime] = field(default=None, metadata={"deserialize": lambda d: d.to_native() if isinstance(d, neo4j.time.DateTime) else dateutil.parser.isoparse(d), "serialize": lambda v: v.isoformat()})'
             else:
                 return f"Optional[{v_type_str}]"
 
