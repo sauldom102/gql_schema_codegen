@@ -29,7 +29,7 @@ class ScalarType(BaseInfo):
             )
             self.dependency_group.add_direct_dependency("dateutil.parser")
             self.dependency_group.add_direct_dependency("neo4j")
-            return ""
+            return f"{self.name} = datetime"
 
         if type(self.value) is not str:
             self.dependency_group.add_dependency(
