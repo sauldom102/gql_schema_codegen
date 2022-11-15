@@ -3,6 +3,7 @@ import sys
 
 from .schema import Schema
 
+
 parser = argparse.ArgumentParser(
     description="Generate python file with types from a  GraphQL schema file."
 )
@@ -24,7 +25,6 @@ parser.add_argument(
     "-t",
     dest="to_path",
     type=str,
-    default="generated_schema_types.py",
     help="wanted output file path (default: schema_types.py)",
 )
 
@@ -37,19 +37,52 @@ parser.add_argument(
     help="path of the config file in yaml format (default: gql_schema_codegen.config.yml)",
 )
 
+blocks = {
+    "enum",
+    "scalar",
+    "type",
+    "param_type",
+    "input",
+}
+
+parser.add_argument(
+    "-b",
+    "--block",
+    dest="blocks",
+    action="append",
+    choices=blocks,
+    help="operate on these blocks differently",
+)
+
+group = parser.add_mutually_exclusive_group()
+
+group.add_argument(
+    "--import",
+    dest="import_blocks",
+    help="module name from where to import --blocks",
+)
+
+group.add_argument(
+    "--only",
+    dest="only_blocks",
+    action="store_true",
+    help="only output blocks specified in --blocks",
+)
+
 
 args = parser.parse_args()
 
 if __name__ == "__main__":
-    schema_path, schema_url, to_path, config_file = (
-        args.schema_path,
-        args.schema_url,
-        args.to_path,
-        args.config_file,
+    s = Schema(
+        path=args.schema_path,
+        url=args.schema_url,
+        config_file=args.config_file,
+        blocks=args.blocks,
+        import_blocks=args.import_blocks,
+        only_blocks=args.only_blocks,
     )
-
-    s = Schema(path=schema_path, url=schema_url, config_file=config_file)
-    file_representation = s.generate_type_file(to_path)
-
-    sys.stdout.write(file_representation)
-    sys.stdout.close()
+    if args.to_path:
+        file_representation = s.generate_type_file(args.to_path)
+    else:
+        sys.stdout.write(s.file_representation)
+        sys.stdout.close()

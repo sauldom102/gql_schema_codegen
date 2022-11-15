@@ -25,11 +25,17 @@ class Block(BaseInfo):
         self.parent_classes = set()
 
     @property
-    def heading_file_line(self):
+    def display_name(self):
         display_name = pascal_case(self.name)
 
         if self.type == "param_type":
             display_name = f"{display_name}Params"
+
+        return display_name
+
+    @property
+    def heading_file_line(self):
+        display_name = self.display_name
 
         if self.type == "enum":
             self.dependency_group.add_dependency(

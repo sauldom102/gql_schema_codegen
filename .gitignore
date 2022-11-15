@@ -1,2 +1,5 @@
 Pipfile*
 *__pycache__*
+tags
+build
+*.egg-info
