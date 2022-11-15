@@ -210,9 +210,6 @@ class Schema:
                 block_type = block["type"]
                 block_name = block["name"]
 
-                if self._only_blocks and block_type not in self._special_blocks:
-                    continue
-
                 all_block_fields[block_name] = set()
                 for field in self.get_fields_from_block(block["fields"]):
                     all_block_fields[block_name].add(field["name"])
@@ -240,6 +237,8 @@ class Schema:
                     self.dependency_group.add_dependency(
                         Dependency(self._import_blocks, b.display_name)
                     )
+                elif self._only_blocks and block_type not in self._special_blocks:
+                    continue
                 else:
                     blocks.append(b)
 
@@ -272,9 +271,6 @@ class Schema:
 
     @property
     def scalars(self):
-        if self._only_blocks and "scalar" not in self._special_blocks:
-            return []
-
         if not self._scalars:
             self._scalars = []
 
@@ -282,14 +278,18 @@ class Schema:
                 scalar_info = ScalarInfo(
                     name=u["name"], value=self.custom_scalars.get(u["name"])
                 )
+                scalar = ScalarType(scalar_info, dependency_group=self.dependency_group)
                 if self._import_blocks and "scalar" in self._special_blocks:
+                    # hack to adjust dependency group
+                    scalar.file_representation
                     self.dependency_group.add_dependency(
                         Dependency(self._import_blocks, scalar_info.name)
                     )
                 else:
-                    self._scalars.append(
-                        ScalarType(scalar_info, dependency_group=self.dependency_group)
-                    )
+                    self._scalars.append(scalar)
+
+        if self._only_blocks and "scalar" not in self._special_blocks:
+            return []
 
         return self._scalars
 
