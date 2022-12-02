@@ -1,11 +1,14 @@
 import os
 import re
-from typing import List, Literal, NamedTuple, Optional, Union
+from collections import defaultdict
+from typing import Dict, List, Literal, NamedTuple, Optional, Set, Union
 
 from ..base import BaseInfo
 from ..constants import RESOLVER_TYPES, VALUE_TYPES
 from ..constants.block_fields import all_block_fields
-from ..dependency import Dependency, DependencyGroup
+from ..dependency import (Dependency, DependencyGroup,
+                          get_interface_dependencies,
+                          remove_interface_dependencies)
 from ..utils import pascal_case
 
 
@@ -16,6 +19,14 @@ class BlockFieldInfo(NamedTuple):
     params: Optional[str]
     is_field_from_params: Optional[bool]
     value_type: str
+
+
+# a dictionary where for each node, we hold its children
+inheritanceTree: Dict[str, Set[str]] = defaultdict(lambda: set())
+
+
+def get_inheritance_tree():
+    return inheritanceTree
 
 
 class Block(BaseInfo):
@@ -35,6 +46,7 @@ class Block(BaseInfo):
 
     @property
     def heading_file_line(self):
+        global inheritanceTree
         display_name = self.display_name
 
         if self.type == "enum":
@@ -59,15 +71,24 @@ class Block(BaseInfo):
         )
 
         if not self.implements:
+            # check if we have an interface implementing another interface
+            deps = get_interface_dependencies()
+            if display_name in deps:
+                inheritanceTree[deps[display_name]].add(display_name)
+                return f"@dataclass(kw_only=True)\nclass {display_name}({deps[display_name]}):"
+
+            inheritanceTree["root"].add(display_name)
             return (
                 f"@dataclass(kw_only=True)\nclass {display_name}(DataClassJSONMixin):"
             )
 
-        for el in self.info.implements.split("&"):  # type: ignore
-            self.parent_classes.add(el.strip())
-
-        parent = ", ".join(list(self.parent_classes))
-        return f"@dataclass(kw_only=True)\nclass {display_name}({parent}):"
+        parents = remove_interface_dependencies(
+            [x.strip() for x in self.info.implements.split("&")]  # type: ignore
+        )
+        for p in parents:
+            inheritanceTree[p].add(display_name)
+        parent_str = ", ".join(parents)
+        return f"@dataclass(kw_only=True)\nclass {display_name}({parent_str}):"
 
     @property
     def category(self):
@@ -99,8 +120,8 @@ class Block(BaseInfo):
         parent_fields = set()
         for p in self.parent_classes:
             parent_fields.update(all_block_fields.get(p, set()))
-
         for f in self.fields:
+            # don't re-include parent fields
             if str(f).split(":")[1].strip() in parent_fields:
                 continue
 

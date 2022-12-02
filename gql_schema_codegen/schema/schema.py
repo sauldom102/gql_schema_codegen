@@ -2,29 +2,21 @@ import json
 import os
 import re
 import subprocess
-from typing import List, Optional, Set
+from typing import Dict, List, Optional, Set
 
 import yaml
-from graphql import (
-    build_client_schema,
-    build_schema,
-    get_introspection_query,
-    print_schema,
-)
+from graphql import (build_client_schema, build_schema,
+                     get_introspection_query, print_schema)
 from graphqlclient import GraphQLClient
 
-from ..block import Block, BlockField, BlockFieldInfo, BlockInfo
-from ..constants import (
-    BLOCK_PATTERN,
-    DIRECTIVE_PATTERN,
-    DIRECTIVE_USAGE_PATTERN,
-    FIELD_PATTERN,
-    RESOLVER_TYPES,
-    SCALAR_PATTERN,
-    UNION_PATTERN,
-)
+from ..block import (Block, BlockField, BlockFieldInfo, BlockInfo,
+                     get_inheritance_tree)
+from ..constants import (BLOCK_PATTERN, DIRECTIVE_PATTERN,
+                         DIRECTIVE_USAGE_PATTERN, FIELD_PATTERN,
+                         RESOLVER_TYPES, SCALAR_PATTERN, UNION_PATTERN)
 from ..constants.block_fields import all_block_fields
-from ..dependency import Dependency, DependencyGroup
+from ..dependency import (Dependency, DependencyGroup,
+                          update_interface_dependencies)
 from ..scalar import ScalarInfo, ScalarType
 from ..union import UnionInfo, UnionType
 
@@ -47,18 +39,20 @@ class Schema:
     _only_blocks: bool = False
 
     def __init__(self, **kwargs) -> None:
-        if "path" in kwargs and type(kwargs["path"]) is str:
+        if "path" in kwargs and isinstance(kwargs["path"], str):
             self.path = kwargs["path"]
 
-        if "url" in kwargs and type(kwargs["url"]) is str:
+        if "url" in kwargs and isinstance(kwargs["url"], str):
             self.url = kwargs["url"]
 
-        if "config_file" in kwargs and type(kwargs["config_file"]) is str:
+        if "config_file" in kwargs and isinstance(kwargs["config_file"], str):
             self.config_file = kwargs["config_file"]
 
         self._special_blocks = kwargs.get("blocks", self._special_blocks)
         self._import_blocks = kwargs.get("import_blocks", self._import_blocks)
         self._only_blocks = kwargs.get("only_blocks", self._only_blocks)
+
+        update_interface_dependencies(self.config_file_content)
 
         self.dependency_group = DependencyGroup()
 
@@ -76,9 +70,9 @@ class Schema:
 
     @property
     def custom_scalars(self) -> dict[str, str]:
-        if type(self.config_file_content) is dict:
+        if isinstance(self.config_file_content, dict):
             data = self.config_file_content.get("scalars")
-            if type(data) is dict:
+            if isinstance(data, dict):
                 return data
 
         return {}
@@ -209,7 +203,6 @@ class Schema:
 
                 block_type = block["type"]
                 block_name = block["name"]
-
                 all_block_fields[block_name] = set()
                 for field in self.get_fields_from_block(block["fields"]):
                     all_block_fields[block_name].add(field["name"])
@@ -250,11 +243,40 @@ class Schema:
 
     @property
     def sorted_blocks(self):
-        types_order = ["enum", "type", "param_type", "input"]
-        return sorted(
-            self.blocks,
-            key=lambda b: (types_order.index(b.type) if b.type in types_order else -1),
-        )
+        # first populate inheritance tree. this is VERY dirty for now but we
+        # should refactor this soon. We are calling b.heading_file_line for all
+        # blocks here as this is what populates the tree, and we only do this
+        # once
+        all_blocks: Dict[str, Block] = {}
+        for b in self.blocks:
+            all_blocks[b.name] = b
+            _ = b.heading_file_line
+        inheritanceTree = get_inheritance_tree()
+        sorted_bl: List[Block] = []
+        # first add enums - these have no dependencies
+        sorted_bl.extend(list(filter(lambda x: x.type == "enum", self.blocks)))
+
+        types_order = ["interface", "type", "param_type", "input"]
+        for t in types_order:
+            interfaces = list(filter(lambda x: x.type == t, self.blocks))
+
+            to_add = {b.name for b in interfaces}
+            blocks: List[Block] = []
+
+            # add nodes in a BFS manner to ensure we don't break dependencies
+            queue: List[str] = ["root"]
+            visited: Set[str] = set(["root"])
+            while queue:
+                node = queue.pop(0)
+                if node in to_add:
+                    blocks.append(all_blocks[node])
+                for child_node in inheritanceTree.get(node, []):
+                    if child_node not in visited:
+                        visited.add(child_node)
+                        queue.append(child_node)
+
+            sorted_bl.extend(blocks)
+        return sorted_bl
 
     @property
     def unions(self):
@@ -302,17 +324,15 @@ class Schema:
         lines: List[str] = ["\n" * 2]
 
         if len(self.scalars) > 0:
-            # lines.extend(['## Scalars'] + ['\n' * 2])
-
             for s in self.scalars:
-                lines.extend([s.file_representation] + ["\n" * 2])
+                lines.extend([s.file_representation] + ["\n"])
+
+        lines.append("\n" * 2)
 
         if len(self.unions) > 0:
             self.dependency_group.add_dependency(
                 Dependency(imported_from="typing", dependency="Union")
             )
-            lines.extend(["## Union Types"] + ["\n" * 2])
-
             for u in self.unions:
                 lines.extend([u.file_representation] + ["\n" * 2])
 
