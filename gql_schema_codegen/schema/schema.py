@@ -39,13 +39,13 @@ class Schema:
     _only_blocks: bool = False
 
     def __init__(self, **kwargs) -> None:
-        if "path" in kwargs and type(kwargs["path"]) is str:
+        if "path" in kwargs and isinstance(kwargs["path"], str):
             self.path = kwargs["path"]
 
-        if "url" in kwargs and type(kwargs["url"]) is str:
+        if "url" in kwargs and isinstance(kwargs["url"], str):
             self.url = kwargs["url"]
 
-        if "config_file" in kwargs and type(kwargs["config_file"]) is str:
+        if "config_file" in kwargs and isinstance(kwargs["config_file"], str):
             self.config_file = kwargs["config_file"]
 
         self._special_blocks = kwargs.get("blocks", self._special_blocks)
@@ -70,9 +70,9 @@ class Schema:
 
     @property
     def custom_scalars(self) -> dict[str, str]:
-        if type(self.config_file_content) is dict:
+        if isinstance(self.config_file_content, dict):
             data = self.config_file_content.get("scalars")
-            if type(data) is dict:
+            if isinstance(data, dict):
                 return data
 
         return {}

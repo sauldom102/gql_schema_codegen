@@ -1,5 +1,6 @@
 import os
 import re
+from collections import defaultdict
 from typing import Dict, List, Literal, NamedTuple, Optional, Set, Union
 
 from ..base import BaseInfo
@@ -21,7 +22,7 @@ class BlockFieldInfo(NamedTuple):
 
 
 # a dictionary where for each node, we hold its children
-inheritanceTree: Dict[str, Set[str]] = {"root": set()}
+inheritanceTree: Dict[str, Set[str]] = defaultdict(lambda: set())
 
 
 def get_inheritance_tree():
@@ -73,9 +74,7 @@ class Block(BaseInfo):
             # check if we have an interface implementing another interface
             deps = get_interface_dependencies()
             if display_name in deps:
-                siblings = inheritanceTree.get(deps[display_name], set())
-                siblings.add(display_name)
-                inheritanceTree[deps[display_name]] = siblings
+                inheritanceTree[deps[display_name]].add(display_name)
                 return f"@dataclass(kw_only=True)\nclass {display_name}({deps[display_name]}):"
 
             inheritanceTree["root"].add(display_name)
@@ -87,9 +86,7 @@ class Block(BaseInfo):
             [x.strip() for x in self.info.implements.split("&")]  # type: ignore
         )
         for p in parents:
-            siblings = inheritanceTree.get(p, set())
-            siblings.add(display_name)
-            inheritanceTree[p] = siblings
+            inheritanceTree[p].add(display_name)
         parent_str = ", ".join(parents)
         return f"@dataclass(kw_only=True)\nclass {display_name}({parent_str}):"
 

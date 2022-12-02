@@ -31,7 +31,7 @@ class ScalarType(BaseInfo):
             self.dependency_group.add_direct_dependency("neo4j")
             return f"{self.name} = datetime"
 
-        if type(self.value) is not str:
+        if not isinstance(self.value, str):
             self.dependency_group.add_dependency(
                 Dependency(imported_from="typing", dependency="Any")
             )

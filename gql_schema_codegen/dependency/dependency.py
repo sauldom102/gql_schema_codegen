@@ -16,9 +16,9 @@ def get_interface_dependencies():
 
 def update_interface_dependencies(config_file_content):
     global INTERMEDIATE_INTERFACES
-    if type(config_file_content) is dict:
+    if isinstance(config_file_content, dict):
         data = config_file_content.get("interfaceInheritance")
-        if type(data) is dict:
+        if isinstance(data, dict):
             INTERMEDIATE_INTERFACES = data
 
 
@@ -54,8 +54,7 @@ def remove_interface_dependencies(
     ['t1', 't2', 'i1', 'ni1', 't3']
     """
     deps: Set[str] = set()
-    if not intermediate_interfaces:
-        intermediate_interfaces = INTERMEDIATE_INTERFACES
+    intermediate_interfaces = intermediate_interfaces or INTERMEDIATE_INTERFACES
     for i in interfaces:
         if i not in intermediate_interfaces:
             # this is not an intermediate interface, thus we are keeping it
