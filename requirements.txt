@@ -3,7 +3,7 @@ ariadne==0.14.1
 attrs==21.4.0
 autopep8==1.6.0
 bleach==4.1.0
-certifi==2021.10.8
+certifi==2022.12.7
 charset-normalizer==2.0.12
 colorama==0.4.4
 docutils==0.18.1
