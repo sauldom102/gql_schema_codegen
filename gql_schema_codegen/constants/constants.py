@@ -17,9 +17,9 @@ FIELD_PATTERN = (
     r"(?P<name>[\w_]+)(\((?P<params>[^)]+)\))?(\:\s(?P<value_type>([\w\[\]_!]+)))?.*\n"
 )
 
-UNION_PATTERN = r"^union\s(?P<name>[\w_]+)\s=\s(?P<types>[\w\s,|]+)$"
+UNION_PATTERN = r"^\s*union\s+(?P<name>[\w_]+)\s=\s(?P<types>[\w\s,|]+)$"
 
-SCALAR_PATTERN = r"^scalar\s(?P<name>[\w_]+)$"
+SCALAR_PATTERN = r"^\s*scalar\s+(?P<name>[\w_]+)$"
 
 DIRECTIVE_PATTERN = r"directive[\s\n\w:_|@()\[\]-]+\son\s[\w_]+"
 

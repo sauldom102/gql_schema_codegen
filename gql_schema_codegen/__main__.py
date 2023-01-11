@@ -3,7 +3,6 @@ import sys
 
 from .schema import Schema
 
-
 parser = argparse.ArgumentParser(
     description="Generate python file with types from a  GraphQL schema file."
 )
@@ -13,7 +12,7 @@ parser.add_argument(
     "-p",
     dest="schema_path",
     type=str,
-    help="path of the schema file (default: schema.graphql)",
+    help="path of the schema file",
 )
 
 parser.add_argument(
@@ -25,7 +24,7 @@ parser.add_argument(
     "-t",
     dest="to_path",
     type=str,
-    help="wanted output file path (default: schema_types.py)",
+    help="wanted output file path",
 )
 
 parser.add_argument(
@@ -33,8 +32,7 @@ parser.add_argument(
     "-c",
     dest="config_file",
     type=str,
-    default="gql_schema_codegen.config.yml",
-    help="path of the config file in yaml format (default: gql_schema_codegen.config.yml)",
+    help="path of the config file in yaml format",
 )
 
 blocks = {

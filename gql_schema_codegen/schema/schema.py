@@ -54,7 +54,20 @@ class Schema:
 
         update_interface_dependencies(self.config_file_content)
 
+        # FIXME dependencies are not properly pulled in cases of --only flags
+        # etc
         self.dependency_group = DependencyGroup()
+        self.dependency_group.add_dependency(
+            Dependency(imported_from="dataclasses", dependency="dataclass")
+        )
+        self.dependency_group.add_dependency(
+            Dependency(imported_from="dataclasses", dependency="field")
+        )
+        self.dependency_group.add_dependency(
+            Dependency(imported_from="datetime", dependency="datetime")
+        )
+        self.dependency_group.add_direct_dependency("dateutil.parser")
+        self.dependency_group.add_direct_dependency("neo4j")
 
     @property
     def config_file_content(self) -> Optional[dict[str, str]]:
@@ -98,32 +111,7 @@ class Schema:
     def is_schema_path(self):
         return bool(self.path and os.path.isdir(self.path))
 
-    @property
-    def marged_schema_from_dir(self):
-        INSTALLATION_COMMAND = "npm list -g graphql-schema-utilities ||npm i --global graphql-schema-utilities"
-        if self.is_schema_path and self.path:
-            try:
-                subprocess.call(
-                    INSTALLATION_COMMAND, shell=True, stdout=subprocess.DEVNULL
-                )
-            except:
-                pass
-
-            glob_paths = [
-                os.path.join(self.path, "**/*.gql"),
-                os.path.join(self.path, "**/*.graphql"),
-            ]
-            joined_glob_paths = ",".join(glob_paths)
-            MERGE_COMMAND = f'graphql-schema-utilities -s "{{{joined_glob_paths}}}"'
-            output = subprocess.run(
-                MERGE_COMMAND, shell=True, text=True, capture_output=True
-            )
-            return output.stdout
-
     def read_schema(self):
-        if self.is_schema_path:
-            return self.marged_schema_from_dir
-
         if self.path:
             with open(self.path, "r") as f:
                 return f.read()
@@ -140,6 +128,7 @@ class Schema:
 
         return self._string
 
+    # FIXME add support for directives
     @staticmethod
     def clean_string(string: str):
         cleaned = re.sub(r"\s+#.+\n", "\n", string)
