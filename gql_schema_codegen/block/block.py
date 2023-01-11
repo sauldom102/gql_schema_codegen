@@ -132,7 +132,7 @@ class Block(BaseInfo):
             elif "Optional[" in str(f.file_line):
                 if "dateutil.parser.isopare" in str(f.file_line):
                     lines_with_deps.append(
-                        '    Optional[datetime] = field(default=None, metadata={"deserialize": lambda d: d.to_native() if isinstance(d, neo4j.time.DateTime) else dateutil.parser.isoparse(d), "serialize": lambda v: v.isoformat()})'
+                        '    Optional[datetime] = field(default=None, metadata={"deserialize": lambda d: d.to_native() if isinstance(d, neo4j.time.DateTime) else dateutil.parser.isoparse(d) if d is not None else None, "serialize": lambda v: v.isoformat()})'
                     )
                 else:
                     lines_with_deps.append(f"    {f.file_line} = field(default=None)")
@@ -194,7 +194,7 @@ class BlockField(BaseInfo):
 
         if is_array and not is_array_item_required:
             if "dateutil.parser.isoparse" in str(item_type):
-                item_type = 'Optional[datetime] = field(default=None, metadata={"deserialize": lambda d: d.to_native() if isinstance(d, neo4j.time.DateTime) else dateutil.parser.isoparse(d), "serialize": lambda v: v.isoformat()})'
+                item_type = 'Optional[datetime] = field(default=None, metadata={"deserialize": lambda d: d.to_native() if isinstance(d, neo4j.time.DateTime) else dateutil.parser.isoparse(d) if d is not None else None, "serialize": lambda v: v.isoformat()})'
             else:
                 item_type = f'Optional["{item_type}"]'
 
@@ -218,7 +218,7 @@ class BlockField(BaseInfo):
                 Dependency(imported_from="typing", dependency="Optional")
             )
             if "dateutil.parser.isoparse" in str(v_type_str):
-                return 'Optional[datetime] = field(default=None, metadata={"deserialize": lambda d: d.to_native() if isinstance(d, neo4j.time.DateTime) else dateutil.parser.isoparse(d), "serialize": lambda v: v.isoformat()})'
+                return 'Optional[datetime] = field(default=None, metadata={"deserialize": lambda d: d.to_native() if isinstance(d, neo4j.time.DateTime) else dateutil.parser.isoparse(d) if d is not None else None, "serialize": lambda v: v.isoformat()})'
             else:
                 return f"Optional[{v_type_str}]"
 
