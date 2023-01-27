@@ -5,18 +5,36 @@ import subprocess
 from typing import Dict, List, Optional, Set
 
 import yaml
-from graphql import (build_client_schema, build_schema,
-                     get_introspection_query, print_schema)
+from graphql import (
+    build_client_schema,
+    build_schema,
+    get_introspection_query,
+    print_schema,
+)
 from graphqlclient import GraphQLClient
 
-from ..block import (Block, BlockField, BlockFieldInfo, BlockInfo,
-                     get_inheritance_tree)
-from ..constants import (BLOCK_PATTERN, DIRECTIVE_PATTERN,
-                         DIRECTIVE_USAGE_PATTERN, FIELD_PATTERN,
-                         RESOLVER_TYPES, SCALAR_PATTERN, UNION_PATTERN)
+from ..block import (
+    Block,
+    BlockField,
+    BlockFieldInfo,
+    BlockInfo,
+    get_inheritance_tree,
+)
+from ..constants import (
+    BLOCK_PATTERN,
+    DIRECTIVE_PATTERN,
+    DIRECTIVE_USAGE_PATTERN,
+    FIELD_PATTERN,
+    RESOLVER_TYPES,
+    SCALAR_PATTERN,
+    UNION_PATTERN,
+)
 from ..constants.block_fields import all_block_fields
-from ..dependency import (Dependency, DependencyGroup,
-                          update_interface_dependencies)
+from ..dependency import (
+    Dependency,
+    DependencyGroup,
+    update_interface_dependencies,
+)
 from ..scalar import ScalarInfo, ScalarType
 from ..union import UnionInfo, UnionType
 
@@ -67,7 +85,6 @@ class Schema:
             Dependency(imported_from="datetime", dependency="datetime")
         )
         self.dependency_group.add_direct_dependency("dateutil.parser")
-        self.dependency_group.add_direct_dependency("neo4j")
 
     @property
     def config_file_content(self) -> Optional[dict[str, str]]:

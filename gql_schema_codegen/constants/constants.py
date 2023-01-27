@@ -1,5 +1,6 @@
 from typing import Dict
 
+
 BUILTIN_TYPES = {"str", "int", "float", "bool"}
 
 VALUE_TYPES: Dict[str, str] = {
@@ -8,7 +9,7 @@ VALUE_TYPES: Dict[str, str] = {
     "Int": "int",
     "Float": "float",
     "Boolean": "bool",
-    "DateTime": 'datetime = field(metadata={"deserialize": lambda d: d.to_native() if isinstance(d, neo4j.time.DateTime) else dateutil.parser.isoparse(d), "serialize": lambda v: v.isoformat()})',
+    "DateTime": 'datetime = field(metadata={"deserialize": lambda d: dateutil.parser.isoparse(d), "serialize": lambda v: v.isoformat()})',
 }
 
 BLOCK_PATTERN = r"(?P<type>type|input|enum|interface)\s(?P<name>[\w_]+)\s(implements\s(?P<implements>[\w_\s&]+)\s)?\{(?P<fields>[^}]+)\}\n?"

@@ -22,7 +22,6 @@ setup(
     install_requires=[
         "graphql-core>=3.2.0",
         "graphqlclient>=0.2.4",
-        "neo4j",
         "pyyaml",
     ],
     test_require=[
