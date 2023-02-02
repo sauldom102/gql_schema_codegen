@@ -31,8 +31,8 @@ class Block(BaseInfo):
         if self.type == 'enum':
             self.dependency_group.add_dependency(
                 Dependency(imported_from='enum', dependency='Enum'))
-            return f"{display_name} = Enum('{display_name}', '{' '.join(map(lambda f: f.name, self.fields))}')"
-
+	    return f"{display_name} = Enum('{display_name}', {[value for value in (map(lambda f: f.name, self.fields))]})"	
+	
         self.dependency_group.add_dependency(Dependency(
             imported_from='typing', dependency='TypedDict'))
         return f"{display_name} = TypedDict('{display_name}', {'{'}"
