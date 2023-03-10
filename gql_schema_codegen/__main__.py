@@ -4,7 +4,7 @@ import sys
 from .schema import Schema
 
 parser = argparse.ArgumentParser(
-    description="Generate python file with types from a  GraphQL schema file."
+    description="Generate python file with types from a GraphQL schema file."
 )
 
 parser.add_argument(

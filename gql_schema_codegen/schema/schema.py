@@ -40,7 +40,6 @@ from ..union import UnionInfo, UnionType
 
 
 class Schema:
-
     _string: Optional[str] = None
     _blocks: List[Block] = []
     _cleaned_string: Optional[str] = None
@@ -282,6 +281,7 @@ class Schema:
                         queue.append(child_node)
 
             sorted_bl.extend(blocks)
+        sorted_bl.sort(key=lambda x: x.display_name)
         return sorted_bl
 
     @property
