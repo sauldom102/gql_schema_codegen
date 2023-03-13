@@ -275,13 +275,15 @@ class Schema:
                 node = queue.pop(0)
                 if node in to_add:
                     blocks.append(all_blocks[node])
-                for child_node in inheritanceTree.get(node, []):
+                children = list(inheritanceTree.get(node, []))
+                children.sort()
+                for child_node in children:
                     if child_node not in visited:
                         visited.add(child_node)
                         queue.append(child_node)
 
             sorted_bl.extend(blocks)
-        sorted_bl.sort(key=lambda x: x.display_name)
+
         return sorted_bl
 
     @property
