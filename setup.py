@@ -22,7 +22,7 @@ setup(
         'argparse==1.4.0',
         'pytest-snapshot==0.8.1',
         'pytest==7.1.1',
-        'PyYAML==6.0'
+        'PyYAML>=6.0'
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
